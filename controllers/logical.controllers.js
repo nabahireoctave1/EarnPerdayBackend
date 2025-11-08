@@ -33,16 +33,14 @@ const bcrypt=require('bcrypt')
    
       try{
           const base_URl="http://localhost:5173"
-      const link_token=crypto.randomBytes(16).toString('hex')
-      const expirerationDate=new Date(Date.now()+24*60*60*1000)//set link to expire in one day
+      const link_token=crypto.randomBytes(32).toString('hex')
       const new_Invitation_link={
       link_token,
       senderId:req.body.senderId,
-      expirerationDate:expirerationDate,
       isused:false
      }
            
-      return res.status(200).json({Link:`${base_URl}/earnperday/join/${link_token}/?ref=${new_Invitation_link.senderId}`})
+      return res.status(200).json({Link:`${base_URl}/join/${link_token}/?ref=${new_Invitation_link.senderId}`})
   
       }catch(err){
          throw err
@@ -283,20 +281,20 @@ const Investment = async (req, res) => {
     const active_userid = req.session.Current_userId;
 
     if (!active_userid) {
-      return res.status(401).json({ message: "Session expired. Please login again." });
+      return
     }
 
     const { RequiredInvestment, Duration, startDate, endDate } = req.body;
     let last_credited_date = startDate;
 
     if (!RequiredInvestment || !Duration) {
-      return res.status(400).json({ message: "Invalid product details or missing data." });
+      return
     }
 
     const investmentAmount = parseFloat(RequiredInvestment);
     let dailyEarn = 0;
 
-    // ✅ Calculate daily earnings based on investment amount
+    
     if (investmentAmount === 2) {
       dailyEarn = investmentAmount * 0.08;
     } else if ([3, 5, 6, 8, 10, 12, 15, 17].includes(investmentAmount)) {
@@ -314,7 +312,7 @@ const Investment = async (req, res) => {
       .query(`SELECT * FROM investments WHERE userID=? AND amount=?`, [active_userid, RequiredInvestment]);
 
     if (existing.length > 0) {
-      return res.status(400).json({ message: "You already invested in this product." });
+      return res.status(400).json({ message: "You already invest on that Product" });
     }
 
  
@@ -323,14 +321,14 @@ const Investment = async (req, res) => {
       .query(`SELECT active_Balance FROM account_balance WHERE UserID=?`, [active_userid]);
 
     if (balanceResult.length === 0) {
-      return res.status(404).json({ message: "Insufficient balance" });
+      return res.status(404).json({ message: "Insufficient balance try again" });
     }
 
     const current_balance = parseFloat(balanceResult[0].active_Balance);
     const investment_required = parseFloat(RequiredInvestment);
 
     if (current_balance < investment_required) {
-      return res.status(400).json({ message: "Insufficient balance" });
+      return res.status(400).json({ message: "Insufficient balance try again" });
     }
 
     const total_earn = dailyEarn * parseFloat(Duration);
@@ -602,7 +600,7 @@ SELECT w.status, w.withdraw_id,w.userID,w.withdrawed_amount,w.net_recieve,
 w.withdrawed_date,u.Realname,
 u.Phone FROM withdraw_request
  AS w INNER JOIN users AS  u
- ON u.userid=w.userID WHERE w.agent=? ORDER BY w.withdraw_id DESC, w.withdrawed_date DESC` 
+ ON u.userid=w.userID WHERE w.agent=? ORDER BY w.withdraw_id ASC, w.withdrawed_date ASC` 
    conn.query(sel_all_request,[agent],await function(err,response){
       if(err) throw err
       return res.status(200).json(response)
@@ -632,7 +630,7 @@ const Return_D_Request=async(req,res)=>{
         D.deposed_amount,D.deposed_date,u.Realname
        FROM deposit_request AS D
         INNER JOIN users AS u ON u.userid=D.userID WHERE D.agent=?
-          ORDER BY D.deposit_id DESC,D.deposed_date DESC `
+          ORDER BY D.deposit_id ASC,D.deposed_date ASC `
 
         conn.query(fetch_Deposit,[agent], await function(err,response){
          if(err) throw err
@@ -744,7 +742,6 @@ const GetUserCredentials=async(req,res)=>{
   if(!CurrentUserID){
     return;
   }
-  console.log(CurrentUserID)
 const [userResult]=await conn.promise().query('SELECT  `Realname`, `Username`, `Phone` FROM `users` WHERE userid=?',[CurrentUserID])
   return res.status(200).json({user:userResult})
   

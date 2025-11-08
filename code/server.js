@@ -59,7 +59,7 @@ app.use('/',userRoutes)
 
 
 // tracker daily earn Every 00:00 
-Cron.schedule("*/5 * * * *",async()=>{
+Cron.schedule("0 0 * * *",async()=>{
      await TrackerDailyEarn()
 },{
     timezone:'Africa/Kigali'
