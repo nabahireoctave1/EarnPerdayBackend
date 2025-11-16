@@ -47,12 +47,12 @@ router.post('/Deposit/approval/:deposit_id/userid/:userId',VerifyToken(),allowed
 router.get('/return/with/request',VerifyToken(),allowedRole('superadmin','admin'),Return_W_Request)
 router.get('/Return/Deposit',VerifyToken(),allowedRole('superadmin','admin'),Return_D_Request)
 
-router.get('/login',VerifyToken(),getUserName)
+router.get('/login',VerifyToken(),allowedRole('user','admin'),getUserName)
 router.get('/currentuserCridentials',VerifyToken(),allowedRole('user'),GetUserCredentials)
 
 router.put('/update/password',EditPassword,VerifyToken(),allowedRole('user'))
 router.put('/Edit/phoneno',updatePhoneNO,VerifyToken(),allowedRole('user'))
-router.put('/update/details',UpdateUsername)
+router.put('/update/details',UpdateUsername,VerifyToken(),allowedRole('user'))
 
 
 

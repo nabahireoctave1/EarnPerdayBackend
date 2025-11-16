@@ -46,7 +46,7 @@ app.use(express.urlencoded({extended:true}))
  }))
 app.listen(port,(err)=>{
     if(!err){
-        console.log(`server running on port${port}`)
+        console.log(`server running`)
     }
 })
 
@@ -58,7 +58,7 @@ app.use('/',userRoutes)
 
 
 
-// tracker daily earn Every 00:00 
+
 Cron.schedule("0 0 * * *",async()=>{
      await TrackerDailyEarn()
 },{

@@ -9,14 +9,11 @@ const Join = async (req, res) => {
     
   try {
     
-    if (!Realname || !username || !phone || !password || !cpassword) {
+    if (!Realname || !username || !phone || !password) {
       return res.status(400).json({ message: "Field required, check all fields" });
     }
 
 
-    if (password !== cpassword) {
-      return res.status(400).json({ message: "Passwords do not match!" });
-    }
 
     
     const [existingUser] = await conn
@@ -78,6 +75,7 @@ const Login=async (req,res)=>{
           if(err){
             
             return res.status(500).json({message:"Login failed"})
+            
           }
           if(response.length==0){
              return res.status(401).json({message:"Login not allowed check your credentials!!"})

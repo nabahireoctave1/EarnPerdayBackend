@@ -33,7 +33,7 @@ const bcrypt=require('bcrypt')
    
       try{
           const base_URl="http://localhost:5173"
-      const link_token=crypto.randomBytes(32).toString('hex')
+      const link_token=crypto.randomBytes(16).toString('hex')
       const new_Invitation_link={
       link_token,
       senderId:req.body.senderId,
@@ -55,15 +55,23 @@ const bcrypt=require('bcrypt')
       return res.status(401).json({message:"session expire login again"})
     }
 
-    const check_user_balance=`SELECT SUM(i.amount) AS amount, 
-
-    Sum(i.daily_earn) AS dailyEan,SUM(i.total_earn) AS totalEarn,
-   i.Duration,
-     COALESCE (AB.active_Balance,0) AS accountBalance 
-    
-      FROM users AS u
-      LEFT JOIN account_balance as AB on u.userid=AB.UserID LEFT JOIN investments 
-      as i on u.userid=i.userID WHERE u.userid= ?`
+    const check_user_balance=`SELECT 
+    SUM(i.amount) AS amount,
+    SUM(i.daily_earn) AS dailyEan,
+    SUM(i.total_earn) AS totalEarn,
+    i.Duration,
+    COALESCE(AB.active_Balance, 0) AS accountBalance
+FROM 
+    users AS u
+LEFT JOIN 
+    account_balance AS AB ON u.userid = AB.UserID
+LEFT JOIN 
+    investments AS i ON u.userid = i.userID 
+WHERE 
+    u.userid = 8162971
+GROUP BY 
+    i.Duration, AB.active_Balance;
+`
     conn.query(check_user_balance,[active_userid],await function(err,response){
       if(err) throw err
       
@@ -93,10 +101,10 @@ const Deposits= async(req,res)=>{
       return res.status(401).json({message:"session expire login again"})
     }
        if(deposed_amount<=0){
-         return res.status(400).json({message:"Deposit amount must not be under or equal to Zero try again"})
+         return res.status(400).json({message:"Deposit amount must not be under  or equal to zero try again"})
        }
        if(!deposed_amount |!agent){
-         return res.status(400).json({message:"Deposit amount Required"})
+         return res.status(400).json({message:"Deposit amount required!"})
        }
         if(!active_userid){
       return res.status(401).json({message:"session Expires Login gain "})
@@ -230,7 +238,6 @@ const Transaction =async(req,res)=>{
        if(!active_userid){
       return res.status(401).json({message:"session expire login again"})
     }
-    console.log(active_userid)
        if(active_userid){
           const fetch_transaction=`SELECT 
     deposed_date AS transaction_date, 
@@ -242,7 +249,7 @@ const Transaction =async(req,res)=>{
 FROM 
     deposit_request 
 WHERE 
-    userID = ${active_userid}
+    userID = ${active_userid} 
 UNION ALL 
 SELECT 
     withdrawed_date AS transaction_date,
@@ -260,7 +267,7 @@ ORDER BY
            conn.query(fetch_transaction,await function(err,response){
              if(err) throw err
                if(response.length==0){
-                  return res.status(404).json({message:"No transaction yet"})
+                  return res.status(404).json({message:"No transaction status available"})
                }
              
                   return res.status(200).json(response)
@@ -312,7 +319,7 @@ const Investment = async (req, res) => {
       .query(`SELECT * FROM investments WHERE userID=? AND amount=?`, [active_userid, RequiredInvestment]);
 
     if (existing.length > 0) {
-      return res.status(400).json({ message: "You already invest on that Product" });
+      return res.status(400).json({ message: "You already invest on that Product!" });
     }
 
  
@@ -321,14 +328,14 @@ const Investment = async (req, res) => {
       .query(`SELECT active_Balance FROM account_balance WHERE UserID=?`, [active_userid]);
 
     if (balanceResult.length === 0) {
-      return res.status(404).json({ message: "Insufficient balance try again" });
+      return res.status(404).json({ message: "Insuffient balance Tap to deposit!" });
     }
 
     const current_balance = parseFloat(balanceResult[0].active_Balance);
     const investment_required = parseFloat(RequiredInvestment);
 
     if (current_balance < investment_required) {
-      return res.status(400).json({ message: "Insufficient balance try again" });
+      return res.status(400).json({ message: "Insuffient balance Tap to deposit!" });
     }
 
     const total_earn = dailyEarn * parseFloat(Duration);
@@ -376,7 +383,7 @@ const Investment = async (req, res) => {
         .query(`SELECT COUNT(*) AS total FROM investments WHERE userID=?`, [active_userid]);
 
       if (countInvest[0].total === 1) {
-        const Bonusvalue = investmentAmount * 0.01;
+        const Bonusvalue = investmentAmount * 0.05;
 
        
         const [bonusRecord] = await conn
